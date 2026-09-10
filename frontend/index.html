@@ -25,12 +25,21 @@
           <input type="text" id="apiUrlInput" placeholder="http://192.168.1.50:8000 or relative" style="flex: 1;" />
           <button id="btnSaveApiUrl" class="btn btn-secondary">Connect</button>
         </div>
+        <small style="color: #94a3b8; margin-top: 4px; display: block;">
+          ℹ️ <strong>Note on Network Scanning:</strong> To scan your local CCTV cameras, the AI Engine backend must run on a device connected to your local Wi-Fi/LAN network (e.g. <code>http://192.168.x.x:8000</code>). Cloud platforms like Vercel cannot reach local private IPs directly.
+        </small>
       </div>
     </section>
 
     <!-- Camera Scanner & Controls Card -->
     <section class="card">
       <h2>Camera Scanner & Stream Management</h2>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="subnetInput">Local Subnet Range:</label>
+        <input type="text" id="subnetInput" value="192.168.1" placeholder="e.g. 192.168.1 or 192.168.0 or 10.0.0" />
+      </div>
+
       <div class="controls-grid">
         <button id="btnScan" class="btn btn-primary">🔍 Scan Local Network</button>
         <button id="btnShowAddModal" class="btn btn-secondary">➕ Add Custom Stream URL</button>

@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const backendStatusEl = document.getElementById('backendStatus');
   const apiUrlInput = document.getElementById('apiUrlInput');
   const btnSaveApiUrl = document.getElementById('btnSaveApiUrl');
+  const subnetInput = document.getElementById('subnetInput');
   const btnScan = document.getElementById('btnScan');
   const btnShowAddModal = document.getElementById('btnShowAddModal');
   const addStreamSection = document.getElementById('addStreamSection');
@@ -12,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const logsContainer = document.getElementById('logsContainer');
   const btnRefreshLogs = document.getElementById('btnRefreshLogs');
 
-  // Load configured API base URL or default to window.location.origin
+  // Load configured API base URL
   let apiBaseUrl = localStorage.getItem('cctv_api_url') || window.location.origin;
   if (apiBaseUrl.endsWith('/')) {
     apiBaseUrl = apiBaseUrl.slice(0, -1);
@@ -91,11 +92,13 @@ document.addEventListener('DOMContentLoaded', () => {
     discoveredList.innerHTML = '<li>Scanning network for ONVIF & RTSP devices...</li>';
     scanResultsSection.classList.remove('hidden');
 
+    const targetSubnet = subnetInput.value.trim() || '192.168.1';
+
     try {
       const res = await fetch(`${apiBaseUrl}/api/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subnet_prefix: '192.168.1' })
+        body: JSON.stringify({ subnet_prefix: targetSubnet })
       });
       const data = await res.json();
       discoveredList.innerHTML = '';
@@ -114,10 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
           discoveredList.appendChild(li);
         });
       } else {
-        discoveredList.innerHTML = '<li class="empty-state">No active CCTV devices found on local network scan. Ensure cameras are powered on and on the same subnet.</li>';
+        discoveredList.innerHTML = `<li class="empty-state">No active CCTV devices found on subnet prefix <strong>${targetSubnet}.x</strong>.<br><br>• Check if your router uses a different subnet (e.g. 192.168.0, 192.168.8, 10.0.0).<br>• Ensure the AI Engine backend is running locally on the same physical Wi-Fi/LAN as the cameras.<br>• If you know the camera's RTSP stream URL, click "Add Custom Stream URL" above.</li>`;
       }
     } catch (e) {
-      discoveredList.innerHTML = '<li class="empty-state">Error performing network scan.</li>';
+      discoveredList.innerHTML = '<li class="empty-state">Error performing network scan. Make sure your local AI Engine server is online and accessible.</li>';
     } finally {
       btnScan.disabled = false;
       btnScan.textContent = '🔍 Scan Local Network';
