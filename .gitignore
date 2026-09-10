@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.log
+yolov8n.pt
+event_logs.json
+/home/jules/verification/

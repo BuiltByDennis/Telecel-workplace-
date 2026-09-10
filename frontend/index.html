@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCTV Smart Vision & Activity Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo">
+      <span class="icon">📹</span>
+      <h1>CCTV Smart Tracker</h1>
+    </div>
+    <div class="status-badge" id="backendStatus">Connecting...</div>
+  </header>
+
+  <main class="container">
+    <!-- Camera Scanner & Controls Card -->
+    <section class="card">
+      <h2>Camera Scanner & Stream Management</h2>
+      <div class="controls-grid">
+        <button id="btnScan" class="btn btn-primary">🔍 Scan Local Network</button>
+        <button id="btnShowAddModal" class="btn btn-secondary">➕ Add Custom Stream URL</button>
+      </div>
+
+      <!-- Manual Stream Input Form -->
+      <div id="addStreamSection" class="form-section hidden">
+        <h3>Add CCTV Camera Stream</h3>
+        <div class="form-group">
+          <label for="streamIdInput">Stream ID / Name:</label>
+          <input type="text" id="streamIdInput" placeholder="e.g. Office_Entrance" />
+        </div>
+        <div class="form-group">
+          <label for="streamUrlInput">RTSP / HTTP Stream URL:</label>
+          <input type="text" id="streamUrlInput" placeholder="rtsp://192.168.1.100:554/live" />
+        </div>
+        <button id="btnAddStream" class="btn btn-success">Start Tracking</button>
+      </div>
+
+      <!-- Discovered Devices List -->
+      <div id="scanResultsSection" class="results-section hidden">
+        <h3>Discovered Network CCTV Devices</h3>
+        <ul id="discoveredList" class="discovered-list"></ul>
+      </div>
+    </section>
+
+    <!-- Active Streams Display Card -->
+    <section class="card">
+      <h2>Live Camera Feeds & AI Tracking</h2>
+      <div id="streamsContainer" class="streams-grid">
+        <div class="empty-state">No camera streams active. Scan network or add RTSP stream above.</div>
+      </div>
+    </section>
+
+    <!-- Real-time Event Logs & Environment Activities Card -->
+    <section class="card">
+      <div class="card-header">
+        <h2>Structured Activity & Movement Logs</h2>
+        <button id="btnRefreshLogs" class="btn btn-sm btn-outline">🔄 Refresh</button>
+      </div>
+      <div id="logsContainer" class="logs-container">
+        <div class="empty-state">No structured events logged yet.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
