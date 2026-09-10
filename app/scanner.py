@@ -1,15 +1,11 @@
 import socket
-import select
-import xml.etree.ElementTree as ET
 import cv2
 import threading
 import time
 from typing import List, Dict, Any
+from concurrent.futures import ThreadPoolExecutor
 
-def scan_onvif_ws_discovery(timeout: float = 2.0) -> List[Dict[str, Any]]:
-    """
-    Scans the local network using WS-Discovery multicast probe on UDP port 3702.
-    """
+def scan_onvif_ws_discovery(timeout: float = 1.5) -> List[Dict[str, Any]]:
     ws_discovery_msg = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<e:Envelope xmlns:e="http://www.w3.org/2003/05/soap-envelope" '
@@ -57,12 +53,9 @@ def scan_onvif_ws_discovery(timeout: float = 2.0) -> List[Dict[str, Any]]:
     return found_devices
 
 
-def scan_rtsp_ports(subnet_prefix: str = "192.168.1", ports: List[int] = [554, 8554, 8000], timeout: float = 0.3) -> List[Dict[str, Any]]:
-    """
-    Scans a given IPv4 subnet range for open RTSP / CCTV ports.
-    """
+def scan_rtsp_ports(subnet_prefix: str = "192.168.1", ports: List[int] = [554, 8554, 8000], timeout: float = 0.2) -> List[Dict[str, Any]]:
     discovered = []
-    threads = []
+    lock = threading.Lock()
 
     def check_ip_port(ip: str, port: int):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -70,34 +63,29 @@ def scan_rtsp_ports(subnet_prefix: str = "192.168.1", ports: List[int] = [554, 8
         try:
             result = s.connect_ex((ip, port))
             if result == 0:
-                discovered.append({
-                    "ip": ip,
-                    "port": port,
-                    "type": "RTSP/HTTP",
-                    "rtsp_url": f"rtsp://{ip}:{port}/h264" if port in [554, 8554] else f"http://{ip}:{port}/video"
-                })
+                with lock:
+                    discovered.append({
+                        "ip": ip,
+                        "port": port,
+                        "type": "RTSP/HTTP",
+                        "rtsp_url": f"rtsp://{ip}:{port}/h264" if port in [554, 8554] else f"http://{ip}:{port}/video"
+                    })
         except Exception:
             pass
         finally:
             s.close()
 
-    for i in range(1, 255):
-        ip = f"{subnet_prefix}.{i}"
-        for port in ports:
-            t = threading.Thread(target=check_ip_port, args=(ip, port))
-            threads.append(t)
-            t.start()
-
-    for t in threads:
-        t.join(timeout=timeout + 0.1)
+    # Bounded thread pool executor
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        for i in range(1, 255):
+            ip = f"{subnet_prefix}.{i}"
+            for port in ports:
+                executor.submit(check_ip_port, ip, port)
 
     return discovered
 
 
 def verify_rtsp_stream(url: str, timeout_sec: int = 3) -> bool:
-    """
-    Verifies if an RTSP or HTTP video stream can be opened and read.
-    """
     cap = cv2.VideoCapture(url)
     if not cap.isOpened():
         return False

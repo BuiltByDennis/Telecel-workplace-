@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+opencv-python-headless
+ultralytics
+onvif-zeep
+python-multipart
+websockets
+pydantic
+requests
+jinja2

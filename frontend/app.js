@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const backendStatusEl = document.getElementById('backendStatus');
+  const apiUrlInput = document.getElementById('apiUrlInput');
+  const btnSaveApiUrl = document.getElementById('btnSaveApiUrl');
   const btnScan = document.getElementById('btnScan');
   const btnShowAddModal = document.getElementById('btnShowAddModal');
   const addStreamSection = document.getElementById('addStreamSection');
@@ -10,20 +12,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const logsContainer = document.getElementById('logsContainer');
   const btnRefreshLogs = document.getElementById('btnRefreshLogs');
 
+  // Load configured API base URL or default to window.location.origin
+  let apiBaseUrl = localStorage.getItem('cctv_api_url') || window.location.origin;
+  if (apiBaseUrl.endsWith('/')) {
+    apiBaseUrl = apiBaseUrl.slice(0, -1);
+  }
+  apiUrlInput.value = apiBaseUrl;
+
+  btnSaveApiUrl.addEventListener('click', () => {
+    let val = apiUrlInput.value.trim();
+    if (!val) val = window.location.origin;
+    if (val.endsWith('/')) val = val.slice(0, -1);
+    apiBaseUrl = val;
+    localStorage.setItem('cctv_api_url', apiBaseUrl);
+    checkHealth();
+    loadActiveStreams();
+    fetchLogs();
+  });
+
   let activeStreams = [];
 
   // Check Backend Health
   async function checkHealth() {
     try {
-      const res = await fetch('/api/health');
+      const res = await fetch(`${apiBaseUrl}/api/health`);
       if (res.ok) {
         backendStatusEl.textContent = 'Online';
         backendStatusEl.classList.add('online');
       } else {
         backendStatusEl.textContent = 'Error';
+        backendStatusEl.classList.remove('online');
       }
     } catch (e) {
       backendStatusEl.textContent = 'Offline';
+      backendStatusEl.classList.remove('online');
     }
   }
 
@@ -43,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const res = await fetch('/api/streams/add', {
+      const res = await fetch(`${apiBaseUrl}/api/streams/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stream_id: streamId, url: streamUrl })
@@ -70,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scanResultsSection.classList.remove('hidden');
 
     try {
-      const res = await fetch('/api/scan', {
+      const res = await fetch(`${apiBaseUrl}/api/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subnet_prefix: '192.168.1' })
@@ -105,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Quick Add Stream helper
   window.quickAddStream = async (id, url) => {
     try {
-      await fetch('/api/streams/add', {
+      await fetch(`${apiBaseUrl}/api/streams/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stream_id: id, url: url })
@@ -120,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.removeStream = async (streamId) => {
     if (!confirm(`Are you sure you want to stop stream ${streamId}?`)) return;
     try {
-      await fetch(`/api/streams/${streamId}`, { method: 'DELETE' });
+      await fetch(`${apiBaseUrl}/api/streams/${streamId}`, { method: 'DELETE' });
       loadActiveStreams();
     } catch (e) {
       console.error(e);
@@ -130,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load Active Streams
   async function loadActiveStreams() {
     try {
-      const res = await fetch('/api/streams');
+      const res = await fetch(`${apiBaseUrl}/api/streams`);
       const data = await res.json();
       activeStreams = data.streams || [];
 
@@ -149,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="btn btn-sm btn-danger" onclick="removeStream('${stream.stream_id}')">Remove</button>
           </div>
           <div class="stream-video-wrap">
-            <img class="stream-video" src="/api/streams/${stream.stream_id}/video" alt="Live Feed ${stream.stream_id}" loading="lazy">
+            <img class="stream-video" src="${apiBaseUrl}/api/streams/${stream.stream_id}/video" alt="Live Feed ${stream.stream_id}" loading="lazy">
           </div>
           <div class="stream-meta" id="meta_${stream.stream_id}">
             <div class="meta-badges">
@@ -171,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function updateMetadata() {
     for (const stream of activeStreams) {
       try {
-        const res = await fetch(`/api/streams/${stream.stream_id}/metadata`);
+        const res = await fetch(`${apiBaseUrl}/api/streams/${stream.stream_id}/metadata`);
         if (res.ok) {
           const meta = await res.json();
           const pBadge = document.getElementById(`badge_person_${stream.stream_id}`);
@@ -197,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Fetch Event Logs
   async function fetchLogs() {
     try {
-      const res = await fetch('/api/logs');
+      const res = await fetch(`${apiBaseUrl}/api/logs`);
       const data = await res.json();
       const logs = data.logs || [];
 

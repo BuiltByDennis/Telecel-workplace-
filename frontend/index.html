@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CCTV Smart Vision & Activity Tracker</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="app-header">
@@ -16,6 +16,18 @@
   </header>
 
   <main class="container">
+    <!-- Server Connection Config Card -->
+    <section class="card">
+      <h2>Server Configuration</h2>
+      <div class="form-group">
+        <label for="apiUrlInput">Backend AI Engine Address:</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="apiUrlInput" placeholder="http://192.168.1.50:8000 or relative" style="flex: 1;" />
+          <button id="btnSaveApiUrl" class="btn btn-secondary">Connect</button>
+        </div>
+      </div>
+    </section>
+
     <!-- Camera Scanner & Controls Card -->
     <section class="card">
       <h2>Camera Scanner & Stream Management</h2>
@@ -65,6 +77,6 @@
     </section>
   </main>
 
-  <script src="/static/app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
